@@ -49,5 +49,8 @@ library(RCurl)
 ```{r}
 #color scheme: palette(c("#FF3900", "#8AC3E3", "#0F4C81", "#960007", "#D9D9D9", "#242634", "#DB5340"))
 test_file <- read_csv("copy_your_df_raw_path_here")
+test_file |> clean_names()-> test_file
 view(test_file)
 ```
+
+
