@@ -1,0 +1,53 @@
+---
+title: "UPGs Exploration"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: row
+    social: menu
+    vertical layout: fill
+    source_code: embed
+runtime: shiny
+---
+
+```{r global, include = FALSE}
+#load libraries (required)
+library(shinydashboard)
+library(flexdashboard)
+library(shinydashboardPlus)
+library(png)
+library(shiny)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(janitor)
+library(rmarkdown)
+library(ggmap)
+library(maps)
+library(readxl)
+library(readr)
+library(rbokeh)
+
+#these are optional so you may delete them/include some based on what functions you are using
+
+library(magrittr)
+library(highcharter)
+library(shinyjs)
+library(tmap)
+library(tmaptools)
+library(mapdeck)
+library(DT)
+library(sf)
+library(ggmap)
+library(maps)
+library(ggthemes)
+library(viridis)
+library(ggspatial)
+library(gapminder)
+library(RCurl) 
+```
+
+```{r}
+#color scheme: palette(c("#FF3900", "#8AC3E3", "#0F4C81", "#960007", "#D9D9D9", "#242634", "#DB5340"))
+test_file <- read_csv("copy_your_df_raw_path_here")
+view(test_file)
+```
