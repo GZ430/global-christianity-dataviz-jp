@@ -1,0 +1,7 @@
+# Paste the following code in your Rstudio and make sure the data sets you uploaded import successfully.
+
+```{r}
+test_file <- read_csv("copy_your_df_raw_path.csv")
+test_file |> clean_names()-> test_file
+view(test_file)
+```
