@@ -1,0 +1,437 @@
+---
+title: "UPGs Exploration"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: row
+    social: menu
+    vertical layout: fill
+    source_code: embed
+runtime: shiny
+---
+
+```{r global, include = FALSE}
+#load libraries (required)
+library(shinydashboard)
+library(flexdashboard)
+library(shinydashboardPlus)
+library(png)
+library(shiny)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(janitor)
+library(rmarkdown)
+library(ggmap)
+library(maps)
+library(readxl)
+library(readr)
+
+#these may be optional so you may delete them/include some based on what functions you are using
+library(magrittr)
+library(highcharter)
+library(shinyjs)
+library(tmap)
+library(tmaptools)
+library(mapdeck)
+library(DT)
+library(sf)
+library(ggmap)
+library(maps)
+library(ggthemes)
+library(viridis)
+library(ggspatial)
+library(gapminder)
+
+```
+
+```{r}
+#Use this color scheme: palette(c("#FF3900", "#8AC3E3", "#0F4C81", "#960007", "#D9D9D9", "#242634", "#DB5340"))
+
+#Template Reference:
+#https://github.com/rstudio/flexdashboard/blob/main/inst/examples/crandash/crandash.Rmd
+
+# load data in 'global' chunk so it can be shared by all users of the dashboard
+unreached <- read_excel("unreached_by_country.xlsx")
+unreached |> clean_names()-> unreached
+world_map <- map_data("world")
+
+WWL_rankings <- read_csv("WWL 2022 rankings.csv")
+WWL_rankings |> clean_names()-> WWL_rankings
+world_map <- map_data("world")
+
+map.world_WWL22 <- full_join(WWL_rankings, world_map, by = c("country" = "region")) #try left join later ig
+
+map.world_WWL22 <- map.world_WWL22 %>%
+  mutate(region = country)
+```
+
+
+Storyboard {.storyboard}
+=========================================
+Why should I learn about Unreached People Groups? 
+-----------------------------------------------------------------------
+*Remind yourself of the Great Commission*
+```{r}
+#let user choose bible versus and out put text in a box. 
+checkboxInput(inputId = "check", 
+              label = strong("Show me the Bible")
+              ,FALSE)
+
+#add bible verses
+reactive(
+  if(input$check == TRUE){
+    renderText({print("Then Jesus came to them and said, “All authority in heaven and on earth has been given to me. Therefore go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, and teaching them to obey everything I have commanded you. And surely I am with you always, to the very end of the age.” - Matthew 28:18-20, NIV")})
+  }
+)
+```
+
+Explore the Graphs {.tabset}
+-----------------------------------------------------------------------
+### So what's the issue here?
+```{r picture1, echo = F, fig.cap = "Title", out.width = '100%'}
+knitr::include_graphics("people_groups.png")
+```
+
+
+### Present and Future
+```{r picture2, echo = F, fig.cap = "Title", out.width = '100%'}
+knitr::include_graphics("goal.png")
+```
+
+
+### Global Mission Trends
+```{r picture3, echo = F, fig.cap = "Title", out.width = '100%'}
+knitr::include_graphics("shift.png")
+```
+
+
+### Christian Persecution Status
+
+```{r picture4, echo = F, fig.cap = "Title", out.width = '100%'}
+knitr::include_graphics("WWLSummaryOfViolence.png")
+```
+
+### Bible Translation Status
+```{r picture5, echo = F, fig.cap = "Title", out.width = '100%'}
+knitr::include_graphics("bible_stat.png")
+```
+
+
+
+Explore By Factor
+===================================== 
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+```{r}
+selectInput(inputId = "type", 
+            label = strong("Select Primary Factor"),#change your label
+            choices = c("private_life", "family_life", "community_life", "church_life", "violence", "total_score_wwl_2022"))#use your data $ the column with categorical variables
+
+```
+
+
+Row
+-----------------------------------------------------------------------
+### World Distribution 
+*Population distribution of the factor you selected*
+```{r}
+
+map.world_WWL22_test <- reactive(map.world_WWL22)
+
+#put any dplyr function to in the reactive function to manipulate the data,
+#save them in variables
+
+top_ten <- reactive(
+  map.world_WWL22_test() |>
+  select(country, input$type)|>
+  arrange(desc(input$type))|>
+    distinct() #|>
+  #ungroup()|>
+  #slice(1:5)
+)
+
+#put any ggplot function in the renderPlot() call. 
+#ALWAYS INCLUDE () AFTER YOU CALL YOUR NEW DATA SETS CREATED ABOVE
+renderPlot(
+if (input$type == "private_life") {
+ggplot(data = map.world_WWL22_test()) +
+  geom_map(mapping = aes(long, lat, map_id = region), color = "gray", size = 0.1, show.legend = T, map = map.world_WWL22_test()) +
+  geom_polygon(aes(x = long, y = lat, group = group, fill = as.numeric(private_life)))+
+  theme_void() +
+  theme(legend.position = "bottom") +
+  scale_fill_distiller(palette = "OrRd", direction = 1) +
+  labs(fill = "Private Life Score Per Country") +
+  labs(title = "Private Life Score Per Country")
+} else if (input$type == "family_life") {
+  ggplot(data = map.world_WWL22_test()) +
+    geom_map(mapping = aes(long, lat, map_id = region), color = "gray", size = 0.1, show.legend = T, map = map.world_WWL22_test()) +
+    geom_polygon(aes(x = long, y = lat, group = group, fill = as.numeric(family_life)))+
+    theme_void() +
+    theme(legend.position = "bottom") +
+    scale_fill_distiller(palette = "OrRd", direction = 1) +
+    labs(fill = "Family Life Score By Country") +
+    labs(title = "Family Life Score By Country")
+} else if (input$type == "community_life") {
+  ggplot(data = map.world_WWL22_test()) +
+    geom_map(mapping = aes(long, lat, map_id = region), color = "gray", size = 0.1, show.legend = T, map = map.world_WWL22_test()) +
+    geom_polygon(aes(x = long, y = lat, group = group, fill = as.numeric(community_life)))+
+    theme_void() +
+    theme(legend.position = "bottom") +
+    scale_fill_distiller(palette = "OrRd", direction = 1) +
+    labs(fill = "Community Life Score By Country") +
+    labs(title = "Community Life Score By Country")
+}else if (input$type == "church_life") {
+  ggplot(data = map.world_WWL22_test()) +
+    geom_map(mapping = aes(long, lat, map_id = region), color = "gray", size = 0.1, show.legend = T, map = map.world_WWL22_test()) +
+    geom_polygon(aes(x = long, y = lat, group = group, fill = as.numeric(church_life)))+
+    theme_void() +
+    theme(legend.position = "bottom") +
+    scale_fill_distiller(palette = "OrRd", direction = 1) +
+    labs(fill = "Church Life Score By Country") +
+    labs(title = "Church Life Score By Country")
+} else if (input$type == "violence") {
+  ggplot(data = map.world_WWL22_test()) +
+    geom_map(mapping = aes(long, lat, map_id = region), color = "gray", size = 0.1, show.legend = T, map = map.world_WWL22_test()) +
+    geom_polygon(aes(x = long, y = lat, group = group, fill = as.numeric(violence)))+
+    theme_void() +
+    theme(legend.position = "bottom") +
+    scale_fill_distiller(palette = "OrRd", direction = 1) +
+    labs(fill = "Violence Score By Country") +
+    labs(title = "Violence Score By Country")
+} else if (input$type == "total_score_wwl_2022") {
+  ggplot(data = map.world_WWL22_test()) +
+    geom_map(mapping = aes(long, lat, map_id = region), color = "gray", size = 0.1, show.legend = T, map = map.world_WWL22_test()) +
+    geom_polygon(aes(x = long, y = lat, group = group, fill = as.numeric(total_score_wwl_2022)))+
+    theme_void() +
+    theme(legend.position = "bottom") +
+    scale_fill_distiller(palette = "OrRd", direction = 1) +
+    labs(fill = "Total World Watch List Score") +
+    labs(title = "2022 World Watch List Scores: Total")
+}
+)
+
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Country Scores For Selected Factor
+```{r}
+#renderTable will out put a gt object
+renderTable(
+ top_ten()
+)
+```
+
+
+Explore By Religion
+===================================== 
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+```{r}
+selectInput(inputId = "type_r", 
+            label = strong("Select Primary Religion"),#change your label
+            choices = unique(unreached$primary_religion))#use your data $ the column with categorical variables
+
+#put any dplyr function to in the reactive function to manipulate the data,
+#save them in variables
+selected_religion <- reactive(unreached |> filter(primary_religion == input$type_r))
+
+top_ten_r <- reactive(
+  selected_religion() |>
+  select(ctry, peop_name_across_countries, population, workers_needed, frontier, longitude, latitude)|>
+  arrange(desc(population))|>
+  ungroup()|>
+  slice(1:5)
+)
+
+```
+
+
+Row
+-----------------------------------------------------------------------
+### World Distribution 
+*Population distribution of the religion you selected*
+```{r}
+#put any ggplot function in the renderPlot() call. 
+#ALWAYS INCLUDE () AFTER YOU CALL YOUR NEW DATA SETS CREATED ABOVE
+renderPlot(
+  ggplot() +
+    geom_polygon(data = world_map, aes(x = long, y = lat, group = group), fill = "lightgray")+
+    geom_point(data = selected_religion(),#include () after varaible name
+             mapping = aes(x = longitude, y = latitude, size = population),
+             alpha = 0.6,
+             color = "#0F4C81", 
+             shape = 16,
+             na.rm = T) +
+    geom_point(data = top_ten_r(),
+             mapping = aes(x = longitude, y = latitude, size = population),
+             alpha = 1, 
+             color = "#FF3900", 
+             shape = 2,
+             na.rm = T)+
+    labs(x="", y="")+
+    theme(legend.position = "none")+
+    theme_void()
+)
+
+
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Top 5 People Groups for Selected Religion
+```{r}
+#renderTable will out put a gt object
+renderTable(
+ top_ten_r()|> 
+   select(ctry, peop_name_across_countries, population, frontier)
+)
+```
+
+### Affinity Bloc Overview for Selected Religion
+```{r}
+renderPlot(
+  ggplot(data = selected_religion())+
+  geom_point(aes(x = affinity_bloc, y = population, size = workers_needed), color = "#0F4C81", alpha = 0.6)+
+  xlab("")+
+  ylab("")+
+  coord_flip()+
+  theme_minimal() #+
+    
+)
+```
+
+
+Explore By Continent
+=====================================  
+Inputs {.sidebar}
+-----------------------------------------------------------------------
+```{r}
+selectInput(inputId = "type_c", 
+            label = strong("Select Continent"),
+            choices = unique(unreached$continent))
+
+```
+
+
+Row
+-----------------------------------------------------------------------
+### World Distribution 
+*Population distribution of the continent you selected*
+```{r}
+selected_continent <- reactive(unreached |> filter(continent == input$type_c))
+
+top_ten_c <- reactive(
+  selected_continent() |>
+  select(ctry, peop_name_across_countries, population, workers_needed, frontier, longitude, latitude)|>
+  arrange(desc(population))|>
+  ungroup()|>
+  slice(1:5)
+)
+
+renderPlot(
+  ggplot() +
+    geom_polygon(data = world_map, aes(x = long, y = lat, group = group), fill = "lightgray")+
+    geom_point(data = selected_continent(),
+             mapping = aes(x = longitude, y = latitude, size = population),
+             alpha = 0.6,
+             color = "#0F4C81", 
+             shape = 16,
+             na.rm = T) +
+    geom_point(data = top_ten_c(),
+             mapping = aes(x = longitude, y = latitude, size = population),
+             alpha =1, 
+             color = "#FF3900", 
+             shape = 2,
+             na.rm = T)+
+    labs(x="", y="")+
+    theme(legend.position = "none")+
+    theme_void()
+)
+
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Top 5 People Groups for Selected Continent
+```{r}
+renderTable(
+ top_ten_c()|> 
+   select(ctry, peop_name_across_countries, population, frontier)
+)
+```
+
+### Affinity Bloc Overview for Selected Continent
+```{r}
+renderPlot(
+  ggplot(data = selected_continent())+
+  geom_point(aes(x = affinity_bloc, y = population, size = workers_needed), color = "#0F4C81", alpha = 0.6)+
+  xlab("")+
+  ylab("")+
+  coord_flip()+
+  theme_minimal()+
+  theme(text = element_text(family = "A"))
+    
+)
+```
+
+
+About Our Data
+=====================================  
+Column
+-------------------------------------
+    
+### Joshua Project
+```{r}
+
+```
+
+### Bible Translation Urgency Index
+
+The Bible Translation Urgency Index is a score measuring the urgency of the necessity for a Bible translation of a given language. The score ranges from 0 to 1, with 0 being the least urgent, and 1 being the most urgent. Two metrics are used in the calculation of this score: the Bible translation status of the given language, and its number of speakers.
+
+All languages lacking a complete Bible translation were ordered proportionally by population of speakers on a scale from 1 to 4, with 4 being the largest population, and 1 being the smallest population. The Bible translation status of each language was subtracted from this population score, and the remaining positive differences were also ordered proportionally on a scale from 0 to 1. The remaining values describe each language’s urgency score. 
+
+
+This index assumes that languages with larger speaker populations more urgently need translations so as to prioritise delivery of the Gospel to as many people as possible as quickly as possible. It also weighs existing translation progress such that languages with less progress are deemed more urgent.  A necessary drawback of this index is that smaller languages are categorised as ‘lower priority’, regardless of existing translation progress, as the sheer number of speakers of larger languages outweigh smaller languages. The formulation of this index highlights large languages with no translation progress, which is reflected in the fact that the 12 languages with the largest urgency scores each have speaker populations above 1.4 million but Joshua Project Bible statuses of 1, i.e. no translation progress.
+
+### Bible Translation Urgency Index Map
+
+This map displays all of the world’s languages that have an urgency score as coloured points. The 12 largest languages are bigger than the rest of the points to highlight their urgency above smaller languages. The colour of each point represents the urgency of its translation; darker points represent more urgency, and lighter points represent less urgency. 
+
+### BIble Translation Status Map
+
+This map displays all of the world’s languages that lack a full translation of the Bible as coloured points. The size of each point is proportional to the number of speakers of that language, and its colour represents the progress of its translation as per its Bible status according to Joshua Project. Darker points represent less translation progress, and lighter points represent more translation progress. 
+
+
+Column
+-------------------------------------
+    
+### World Watch List
+
+The World Watch List is a ranking of countries created by Open Doors USA to measure the persecution levels of Christians around the world. Each country is assigned a score from 0 to 100 based on extensive questionnaires covering six areas of life: private life, family life, community life, national life, church life, and violence. 
+In addition to a total score, each country also receives an individual score for each of these areas of life. We have thus created a map for the Total Score, as well as a map for each area of life. Dark red represents higher scores and thus greater levels of persecution, while light red to yellow represent lower scores and thus lower levels of persecution. 
+
+### Government Restrictions Index
+
+The Government Restrictions Index (GRI) measures government laws, policies and actions that restrict religious beliefs and practices. The GRI comprises 20 measures of restrictions, including efforts by government to ban particular faiths, prohibit conversion, limit preaching or give preferential treatment to one or more religious groups. - Pew Research Center
+
+### Social Hostilities Index
+
+The Social Hostilities Index (SHI) measures acts of religious hostility by private individuals, organizations or groups in society. This includes religion-related armed conflict or terrorism, mob or sectarian violence, harassment over attire for religious reasons and other forms of religion-related intimidation or abuse. The SHI includes 13 measures of social hostilities. - Pew Research Center
+
+Column {.tabset}
+-------------------------------------
+
+### Future Development
+
+### Resource & Links
+
+### About the Team
+
