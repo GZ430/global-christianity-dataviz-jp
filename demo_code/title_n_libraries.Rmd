@@ -2,12 +2,13 @@
 title: "Global Christianity Data Exploration"
 output: 
   flexdashboard::flex_dashboard:
-    orientation: row
+    orientation: row #You may change to column
     social: menu
     vertical layout: fill
     source_code: embed
 runtime: shiny
 ---
+
 
 ```{r global, include = FALSE}
 #load libraries (required)
@@ -27,8 +28,10 @@ library(readxl)
 library(readr)
 library(rbokeh)
 
-#these are optional so you may delete them/include some based on what functions you are using
+```
 
+```{r}
+#these are optional so you may delete them/include some based on what functions you are using
 library(magrittr)
 library(highcharter)
 library(shinyjs)
@@ -37,11 +40,11 @@ library(tmaptools)
 library(mapdeck)
 library(DT)
 library(sf)
-library(ggmap)
-library(maps)
 library(ggthemes)
 library(viridis)
 library(ggspatial)
 library(gapminder)
+library(leaflet)
+
 ```
 
