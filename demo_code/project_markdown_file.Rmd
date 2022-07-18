@@ -1,0 +1,256 @@
+---
+title: "project_markdown_file1"
+output: pdf_document
+---
+
+```{r importing libraries}
+# Import libraries
+library(tidyverse)
+library(dplyr)
+library(janitor)
+library(readxl)
+library(plotly)
+library(shiny)
+library(leaflet)
+library(highcharter)
+```
+
+```{r making cleaning function}
+# This function was made to clean various datasets, may come in handy for you if you need it
+
+cleaning_data <- function(x) {
+row_names <- x[1, ] %>%
+  str_split(pattern = ",") %>%
+  unlist()
+
+cleaned_set_to_be_renamed <- x %>%
+  separate(col = 1, into = row_names, sep = ",") %>%
+  row_to_names(row_number = 1)
+}
+```
+
+```{r reading in datasets}
+# Reading in datasets to be used later
+
+all_countries <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/all_countries.csv") %>%
+  clean_names()
+
+all_ppl_by_country <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/all_peoples_by_country.csv") %>%
+  clean_names()
+
+ppl_ctry_lang_listing <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/people_ctry_lang_listing.csv") %>%
+  clean_names()
+
+unreached_by_country <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/unreached_by_country.csv") %>%
+  clean_names()
+
+all_lang_listing <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/all_language_listing.csv") %>%
+  clean_names()
+
+df <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/statistical_annex_table_2020.csv") %>%
+  clean_names()
+
+jp_df <- left_join(all_countries, df, by = c("region" = "country_2019"))
+
+hostility_df <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/government_restrictions_index_2016.csv") %>%
+  distinct() %>%
+  clean_names
+
+full_df <- jp_df %>%
+  full_join(hostility_df, by = c("region" = "name"))
+
+internet_df <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/internet_access_2022.csv") %>%
+  clean_names()
+
+econ_df <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/economic_inequality_gini_index.csv") %>%
+  clean_names()
+
+```
+
+
+```{r}
+# Some data exploration to see relationships between primary religion, percent of nation which is Christian, and other factors
+
+jp_df %>%
+  ggplot() +
+  geom_point(mapping = aes(x = literacy_rate, y = percent_christianity, color = religion_primary), position = "jitter")
+
+jp_df %>%
+  ggplot() +
+  geom_point(mapping = aes(x = percent_urbanized, y = percent_christianity, color = religion_primary), position = "jitter")
+
+jp_df %>%
+  ggplot() +
+  geom_point(mapping = aes(x = life_expectancy_at_birth, y = percent_christianity, color = religion_primary)) +
+  theme(axis.text.x = element_text(angle = 15))
+
+jp_df %>%
+  ggplot() +
+  geom_point(mapping = aes(x = mean_years_of_schooling, y = percent_christianity, color = religion_primary)) +
+  theme(axis.text.x = element_text(angle =15))
+
+jp_df %>%
+  ggplot() +
+  geom_point(mapping = aes(x = religion_primary, y = percent_christianity, color = as.character(jp_scale_ctry)))
+
+jp_df %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = as.character(jp_scale_ctry), fill = as.character(jp_scale_ctry)))
+
+jp_df %>%
+  mutate(religion_primary = fct_relevel(religion_primary, c("Christianity", "Islam", "Buddhism", "Non-Religious", "Ethnic Religions", "Hinduism"))) %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = religion_primary, fill = as.character(jp_scale_ctry))) +
+  coord_flip()
+```
+
+```{r}
+# Creating datasets we'll be using later
+
+econ_2019 <- econ_df %>%
+  filter(year == 2019)
+
+access_df <- full_df %>%
+  full_join(econ_2019, by = c("region" = "entity", "iso3" = "code")) %>%
+  full_join(internet_df, by = c("region" = "country_name", "iso3" = "country_code")) %>%
+  clean_names() %>%
+  select(!c(38:46))
+
+```
+
+```{r accessibility scale}
+# Creating an accessibility scale to determine how hard it is to spread the Gospel in different countries
+
+access_df <- access_df %>%
+  mutate(social_scaled = 10 * as.numeric(social)) %>%
+  mutate(gov_scaled = 10 * as.numeric(government)) %>%
+  mutate(internet_scaled = 100 - as.numeric(x2020_yr2020)) %>%
+  mutate(literacy_scaled = 100 - literacy_rate) %>%
+  mutate(urban_scaled = 100 - percent_urbanized)
+
+social_na <- mean(access_df$social_scaled, na.rm = T)
+gov_na <- mean(access_df$gov_scaled, na.rm = T)
+internet_na <- mean(access_df$internet_scaled, na.rm = T)
+literacy_na <- mean(access_df$literacy_scaled, na.rm = T)
+urban_na <- mean(access_df$urban_scaled, na.rm = T)
+
+access_df <- access_df %>%
+  mutate(social_scaled = replace_na(social_scaled, social_na)) %>%
+  mutate(gov_scaled = replace_na(gov_scaled, gov_na)) %>%
+  mutate(internet_scaled = replace_na(internet_scaled, internet_na)) %>%
+  mutate(literacy_scaled = replace_na(literacy_scaled, literacy_na)) %>%
+  mutate(urban_scaled = replace_na(urban_scaled, urban_na)) %>%
+  mutate(accessibility_score = 100 - ((social_scaled + gov_scaled + internet_scaled + literacy_scaled + urban_scaled) / 5))
+
+```
+
+
+```{r}
+# Creating a map colored by accessibility score (some regions are blank due to discrepencies in names which have not yet been addressed)
+
+map.world <- map_data("world")
+map.world_access <- full_join(access_df, map.world, by = c("region" = "region"))
+
+map.world_access <- map.world_access %>%
+  select(region, long, lat, accessibility_score, religion_primary, social_scaled, gov_scaled, literacy_scaled, urban_scaled, group, order, subregion)
+
+access_plot <- ggplot() + 
+  geom_map(map.world_access, mapping = aes(long, lat, map_id = region, fill = accessibility_score), map = map.world_access) +
+  scale_fill_viridis_c(option = "plasma", trans = "sqrt")
+
+access_plot
+
+```
+
+```{r}
+# Creating a tribble of some data from a graph on Joshua Project's website
+
+missionaries_percent <- tribble(
+  ~world_pop_percent, ~percent_reached, ~percent_missionaries,
+  60, "> 5", 96,
+  15, "0.1 - 5", 3,
+  25, "< 0.1", 1
+)
+```
+
+```{r}
+# An attempt to make a graph with the previous tribble
+
+missionaries_percent %>%
+  ggplot() +
+  geom_col(aes(x = percent_reached, y = world_pop_percent, fill = as.character(percent_missionaries)))
+```
+```{r}
+# A second attempt to make a graph
+
+library(treemap)
+
+treemap(dtf = missionaries_percent,
+        index = c("percent_reached", "world_pop_percent"),
+        vSize = "percent_missionaries",
+        type = "index")
+```
+
+
+```{r}
+# An attempt to make an interactive table to filter countries by primary religion using shiny
+
+library(shiny)
+library(DT)
+
+# Define UI ----
+ui <- fluidPage(
+  titlePanel("Primary Religions By Country"),
+
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("var",
+                  label = "Choose a Variable to Display",
+                  choices = list("Christianity",
+                                 "Islam",
+                                 "Hinduism",
+                                 "Buddhism",
+                                 "Ethnic Religions",
+                                 "Non-Religious"),
+                  )
+    ),
+    mainPanel(DT::dataTableOutput("mytable"))
+  
+))
+
+# Define server logic ----
+server <- function(input, output) {
+
+  output$mytable <- DT::renderDataTable({x <- filter(access_df, religion_primary == input$var)})
+}
+
+# Run the app ----
+shinyApp(ui = ui, server = server)
+```
+
+```{r}
+# An attempt to display map objects through a shinyApp
+
+# Define UI ----
+ui1 <- fluidPage(
+  titlePanel("Primary Religions By Country"),
+
+  sidebarLayout(
+    sidebarPanel(
+      "Colored by accessibility score"
+    ),
+    mainPanel(plotOutput("mymap"))
+  
+))
+
+# Define server logic ----
+server1 <- function(input, output) {
+
+  output$mymap <- renderPlot({access_plot})
+}
+
+# Run the app ----
+shinyApp(ui = ui1, server = server1)
+
+```
+
