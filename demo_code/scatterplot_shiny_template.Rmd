@@ -1,0 +1,111 @@
+---
+title: "Scatterplot Shiny Template"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: row #you may change to column 
+    social: menu
+    vertical layout: fill
+    source_code: embed
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+#load libraries (required)
+library(shinydashboard)
+library(flexdashboard)
+library(shiny)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(janitor)
+library(rmarkdown)
+library(png)
+```
+
+
+```{r}
+#import your data from github repository after you successfully upload the data set
+your_data <- read_csv("paste_your_dataset_raw_path_here.csv")
+your_data |> clean_names()-> your_data
+
+#change the col names to your first input options
+x_col <-  your_data |> select("columns_you_want_to_include", )
+
+#change the col names to your second input options
+y_col <-  your_data |> select("columns_you_want_to_include",)
+
+#change the categorical col names to color input options
+color_col <-  your_data |> select("categorical_columns_you_want_to_include",)
+
+```
+
+
+Your Tab Section Title Here
+=====================================  
+Column {.sidebar}
+-----------------------------------------------------------------------
+```{r}
+#define color scheme. You may add more colors by looking up their hex code online
+palette(c("#FF3900", "#8AC3E3", "#0F4C81", "#960007", "#D9D9D9", "#242634", "#DB5340"))
+
+```
+
+
+```{r}
+#You many change/add/delete user input options
+
+#x axis input
+selectInput(inputId = "x_var", 
+            label = "Select your first metric: ", 
+            choices = names(x_col),
+            value = "your_default_col_name")
+
+#y axis input
+selectInput(inputId = "y_var", 
+            label = "Select your second metric: ", 
+            choices = names(y_col),
+            value = "your_default_col_name")
+
+#color mapping input. Default is "None"   
+selectInput(inputId = "color", 
+            label = "Color by: ", 
+            choices = c("None", names(color_col)),
+            value = "None")
+
+#size mapping input. Default is FALSE. 
+#Delete this input if your data set does not contain a population col
+checkboxInput(inputId = "size", 
+              label = "Size by population", 
+              value = FALSE)
+
+```
+
+
+Column
+-----------------------------------------------------------------------
+### Correlation 
+
+```{r}
+#Define mapping based on selected col names
+renderPlot({
+      p <- ggplot(data = countries, 
+                  aes_string(x = input$x_var, 
+                             y = input$y_var))+ 
+          geom_point()
+      
+#If user select a color mapping other than "None", add color mapping to aes() call
+      if (input$color != "None"){
+        p <- p + aes_string(color = input$color)
+      }
+#If user check the "size by population" box, add size mapping to aes() call
+#Delete this statement if your data set does not contain a population col
+      if (input$size == TRUE){
+        p <- p + aes(size = population)
+      }
+      
+      print(p)
+      
+    })
+
+```
+
