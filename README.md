@@ -35,5 +35,5 @@ Data collection involved a variety of sources. This includes;
 - World Watch List 
 
 ## About the team
-We are part of the Gordon College 2022 summer Data practicum cohort. This is a cohort comprised with a variety of students from different majors and background. 
+We are part of the Gordon College 2022 summer Data practicum cohort. This is a cohort comprised with ten students coming a variety of disciplines and background. 
 
