@@ -16,7 +16,7 @@ The main purpose of this project is to improve the Joshua's project currect visu
 Develop new and improved maps, charts, graphs in the Joshua Project using modern visualization techniques and practices
 Merge Joshua Project's data sets with external data sets such us data on Gross Domestic Product of each country to create a holistic perspective and open the posibility of creating new metrics such us the Government Restriction index and Social Holistic index.
 
-Examples of New metrics created 
+Examples of new metrics created 
 
 <img width="1098" alt="WWL Metrics Examples" src="https://user-images.githubusercontent.com/109535700/179834654-44a963d0-c77c-49ff-8857-0b13c7f9af26.png">
 
