@@ -25,6 +25,7 @@ library(ggmap)
 library(maps)
 library(readxl)
 library(readr)
+library(ggiraph)
 
 #these may be optional so you may delete them/include some based on what functions you are using
 library(magrittr)
@@ -379,6 +380,97 @@ renderPlot(
   theme(text = element_text(family = "A"))
     
 )
+```
+
+
+
+```{r}
+#import your data from github repository after you successfully upload the data set
+wwl_countries <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/countrieswwl.csv")
+wwl_countries |> clean_names()-> wwl_countries
+#change the col names to your first input options
+x_col <-  wwl_countries |> select(dec19gri, total_score_wwl_2022, private_life, family_life, community_life, church_life, violence, percent_urbanized, literacy_rate, percent_christianity, percent_evangelical, workers_needed)
+#change the col names to your second input options
+y_col <-  wwl_countries |> select(dec19gri, total_score_wwl_2022, private_life, family_life, community_life, church_life, violence, percent_urbanized, literacy_rate, percent_christianity, percent_evangelical, workers_needed)
+#change the categorical col names to color input options
+color_col <-  wwl_countries |> select(continent, religion_primary, x10_40window)
+```
+
+
+WWL Data Exploration
+=====================================  
+Column {.sidebar}
+-----------------------------------------------------------------------
+```{r}
+#define color scheme. You may add more colors by looking up their hex code online
+palette(c("#FF3900", "#8AC3E3", "#0F4C81", "#960007", "#D9D9D9", "#242634", "#DB5340"))
+```
+
+
+```{r}
+#You many change/add/delete user input options
+#x axis input
+selectInput(inputId = "x_var", 
+            label = "Select your first metric: ", 
+            choices = names(x_col))
+#y axis input
+selectInput(inputId = "y_var", 
+            label = "Select your second metric: ", 
+            choices = names(y_col))
+#color mapping input. Default is "None"   
+selectInput(inputId = "color", 
+            label = "Color by: ", 
+            choices = c("None", names(color_col)))
+#size mapping input. Default is FALSE. 
+#Delete this input if your data set does not contain a population col
+checkboxInput(inputId = "size", 
+              label = "Size by population")
+```
+
+
+Column
+-----------------------------------------------------------------------
+### Correlation 
+
+```{r}
+palette(c("#FF3900", "#8AC3E3", "#0F4C81", "#960007", "#D9D9D9", "#242634", "#DB5340"))
+
+renderGirafe({
+library(ggiraph)
+library(ggplot2)
+library(magrittr)
+  
+  x_test <- wwl_countries %>%
+    select(input$x_var)
+  
+  y_test <- wwl_countries %>%
+    select(input$y_var)
+  
+  x_test1 <- input$x_var
+  y_test1 <- input$y_var
+  
+      p <- wwl_countries %>%
+            mutate(tooltip_text = sprintf("%s \n X Var: %s \n Y Var: %s", ctry, input$x_var, input$y_var)) %>%        ggplot(aes_string(x = input$x_var,
+                             y = input$y_var)) +
+            geom_point_interactive(aes(tooltip = tooltip_text, data_id = ctry)) +
+        theme_minimal()
+
+#If user select a color mapping other than "None", add color mapping to aes() call
+      if (input$color != "None"){
+        p <- p + aes_string(color = input$color)
+      }
+#If user check the "size by population" box, add size mapping to aes() call
+#Delete this statement if your data set does not contain a population col
+      if (input$size == TRUE){
+        p <- p + aes(size = population)
+      }
+
+x <- ggiraph(code = {print(p)}, zoom_max = 10000000, hover_css = "stroke:black;fill:orange;") 
+x
+})
+
+
+
 ```
 
 
