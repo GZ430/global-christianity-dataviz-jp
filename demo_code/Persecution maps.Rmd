@@ -1,0 +1,223 @@
+---
+title: "Untitled"
+author: "Michel Bayarjargal"
+date: '2022-07-08'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r WWL 2022 General Map}
+
+all_countries <- read_csv("all_countries.csv")
+
+wwl22 <- read_csv("wwl_2022_rankings.csv")
+wwl22 <- clean_names(wwl22)
+
+map_world <- map_data("world")
+
+map_world_wwl22 <- full_join(wwl22, map_world, by = c("country" = "region"))
+#joining world watch list data with polygon data for the map
+
+map_world_wwl22 <- map_world_wwl22 %>%
+  mutate(region = country)
+
+wwl22_total_map <- ggplot() + 
+  geom_map(map_world_wwl22, mapping = aes(long, lat, map_id = region, fill = as.numeric(total_score_wwl_2022)), color = "gray", size = 0.1, map = map_world_wwl22, show.legend = T) +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  scale_fill_distiller(palette = "OrRd", direction = 1) +
+  labs(fill = "Total World Watch List Score") +
+  labs(title = "2022 World Watch List Scores: Total", subtitle = "Source: Open Doors USA") 
+
+wwl22_total_map
+
+ggsave("WWL2022Totalmap.png")
+
+
+  
+```
+```{r Private life 2022}
+wwl22_private_map <- ggplot() + 
+  geom_map(map_world_wwl22, mapping = aes(long, lat, map_id = region, fill = as.numeric(private_life)), color = "gray", size = 0.1, map = map_world_wwl22, show.legend = T) +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  scale_fill_distiller(palette = "OrRd", direction = 1) +
+  labs(fill = "Private Life Score") +
+  labs(title = "2022 World Watch List Scores: Private Life", subtitle = "Source: Open Doors USA") 
+
+ggsave("WWL2022Privatemap.png")
+```
+```{r family life}
+wwl22_family_map <- ggplot() + 
+  geom_map(map_world_wwl22, mapping = aes(long, lat, map_id = region, fill = as.numeric(family_life)), color = "gray", size = 0.1, map = map_world_wwl22, show.legend = T) +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  scale_fill_distiller(palette = "OrRd", direction = 1) +
+  labs(fill = "Family Life Score") +
+  labs(title = "2022 World Watch List Scores: Family Life", subtitle = "Source: Open Doors USA") 
+
+ggsave("WWL2022Familymap.png")
+```
+```{r community life 2022}
+
+wwl22_community_map <- ggplot() + 
+  geom_map(map_world_wwl22, mapping = aes(long, lat, map_id = region, fill = as.numeric(community_life)), color = "gray", size = 0.1, map = map_world_wwl22, show.legend = T) +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  scale_fill_distiller(palette = "OrRd", direction = 1) +
+  labs(fill = "Community Life Score") +
+  labs(title = "2022 World Watch List Scores: Community Life", subtitle = "Source: Open Doors USA") 
+
+ggsave("WWL2022Communitymap.png")
+
+```
+```{r national life 2022}
+wwl22_national_map <- ggplot() + 
+  geom_map(map_world_wwl22, mapping = aes(long, lat, map_id = region, fill = as.numeric(national_life)), color = "gray", size = 0.1, map = map_world_wwl22, show.legend = T) +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  scale_fill_distiller(palette = "OrRd", direction = 1) +
+  labs(fill = "National Life Score") +
+  labs(title = "2022 World Watch List Scores: National Life", subtitle = "Source: Open Doors USA") 
+
+ggsave("WWL2022Nationalmap.png")
+```
+```{r church life 2022}
+
+wwl22_church_map <- ggplot() + 
+  geom_map(map_world_wwl22, mapping = aes(long, lat, map_id = region, fill = as.numeric(church_life)), color = "gray", size = 0.1, map = map_world_wwl22, show.legend = T) +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  scale_fill_distiller(palette = "OrRd", direction = 1) +
+  labs(fill = "Church Life Score") +
+  labs(title = "2022 World Watch List Scores: Church Life", subtitle = "Source: Open Doors USA") 
+
+ggsave("WWL2022Churchmap.png")
+
+```
+```{r violence 2022}
+
+wwl22_violence_map <- ggplot() + 
+  geom_map(map_world_wwl22, mapping = aes(long, lat, map_id = region, fill = as.numeric(violence)), color = "gray", size = 0.1, map = map_world_wwl22, show.legend = T) +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  scale_fill_distiller(palette = "OrRd", direction = 1) +
+  labs(fill = "Violence Score") +
+  labs(title = "2022 World Watch List Scores: Violence", subtitle = "Source: Open Doors USA") 
+
+ggsave("WWL2022Violencemap.png")
+
+```
+```{r Violence summary line graph}
+violence_summary <- read_csv("violence_summary.csv")
+
+violence_summary <- clean_names(violence_summary)
+
+violence_graph <- ggplot(data=violence_summary, aes(x = year, y = count, group = question)) +
+  geom_line(aes(linetype = question), size = 1, color = "maroon") +
+  geom_point(aes(shape = question), size = 2.3, color = "black") +
+  theme_bw() +
+  labs(title = "WWL Summary of Violence 2016-2022") +
+  labs(x = "Year", y = "Count") +
+  scale_linetype_discrete(name ="Violence Type") +
+  scale_shape_discrete(name = "Violence Type")
+
+violence_graph
+
+ggsave("WWLSummaryofViolence.png")
+
+```
+```{r Scatterplot of GRI and WWL Score}
+
+countrieswwl <- all_countries %>%
+  left_join(wwl22, by = c("Ctry" = "country"))
+
+gri_shi <- read_csv("gri_shi")
+gri_shi <- clean_names(gri_shi)
+
+countrieswwl <- countrieswwl %>%
+  left_join(gri_shi, by = c("Ctry" = "country"))
+
+gri_wwl_continent_graph <- ggplot(countrieswwl, aes(x = dec19gri, y = total_score_wwl_2022)) +
+  geom_point(aes(size = Population, color = Continent)) +
+  scale_size_continuous(range = c(1, 18), guide = "none") +
+  labs(title = "Total 2022 WWL Score versus 2019 Government Restriction Index", x = "Government Restriction Index", y = "WWL Score", subtitle = "Restrictive governments persecute Christians most") +
+  theme_bw()
+
+gri_wwl_continent_graph
+
+ggsave("GRIversusWWL22.png")
+```
+
+```{r Scatterplot of GRI and WWL Score coloured by Religion}
+gri_wwl_religion_graph <- ggplot(countrieswwl, aes(x = dec19gri, y = total_score_wwl_2022)) +
+  geom_point(aes(size = Population, color = ReligionPrimary)) +
+  scale_size_continuous(range = c(1, 18), guide = "none") +
+  labs(title = "Total 2022 WWL Score versus 2019 Government Restriction Index", x = "Government Restriction Index", y = "WWL Score", subtitle = "Primarily Muslim countries among most punishing to Christians") +
+  scale_color_discrete(name = "Primary Religion") +
+  theme_bw()
+
+gri_wwl_religion_graph
+
+ggsave("GRIversusWWL22colourreligion.png")
+
+```
+```{r coloured by JP Scale}
+gri_wwl_jp_graph <- ggplot(countrieswwl, aes(x = dec19gri, y = total_score_wwl_2022)) +
+  geom_point(aes(size = Population, color = as.character(JPScaleCtry))) +
+  scale_size_continuous(range = c(1, 18), guide = "none") +
+  labs(title = "Total 2022 WWL Score versus 2019 Government Restriction Index", x = "Government Restriction Index", y = "WWL Score", subtitle = "Least reached countries most punishing to Christians") +
+  scale_color_discrete(name = "JP Scale") +
+  theme_bw()
+
+gri_wwl_jp_graph
+
+ggsave("GRIversusWWL22colourJP.png")
+
+```
+```{r violence versus social hostility}
+shi_violence_graph <- ggplot(countrieswwl, aes(x = dec19shi, y = violence)) +
+  geom_point(aes(size = Population, color = Continent)) +
+  scale_size_continuous(range = c(1, 18), guide = "none") +
+  labs(title = "2022 WWL Violence Score versus 2019 Social Hostility Index", x = "Social Hostility Index", y = "WWL Violence Score", subtitle = "Violence against Christians and social hostility to religion loosely related") +
+  scale_color_discrete(name = "JP Scale") +
+  theme_bw()
+
+shi_violence_graph
+
+ggsave("SHIversusViolence.png")
+```
+```{r saving datasets as csv}
+
+write.csv(countrieswwl, "countrieswwl.csv")
+write.csv(gri_shi, "gri_shi.csv")
+write.csv(map_world_wwl22, "map_world_wwl22.csv")
+write.csv(violence_summary, "violence_summary.csv")
+write.csv(wwl22, "wwl22.csv")
+```
+
+

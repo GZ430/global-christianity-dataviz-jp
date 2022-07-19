@@ -1,0 +1,291 @@
+---
+title: "Bible Translation"
+author: "Michel Bayarjargal"
+date: '2022-07-18'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r loading packages}
+library(gt)
+library(tidyverse)
+library(webshot)
+library(tidyverse)
+```
+
+
+```{r Loading the original JP datasets}
+all_countries <- read_csv("all_countries.csv")
+all_language_listing <- read_csv("all_language_listing.csv")
+all_peoples_by_country <- read_csv("all_peoples_by_country.csv")
+field_definitions <- read_csv("field_definitions.csv")
+people_ctry_lang_listing <- read_csv("people_ctry_lang_listing.csv")
+unreached_peoples_by_country <- read_csv("unreached_peoples_by_country.csv")
+```
+
+```{r Joining people group location data with people group language data}
+speakers_bible <- people_ctry_lang_listing %>%
+  left_join(all_language_listing, by = "ROL3")
+```
+
+```{r Grace function code}
+#function input: a numeric vector, a min of the bin(0, 0.25, 0.75), a max of the bin(0.25, 0.75, 1). Return: based on the value of each entry in the vector, assign min of bin to min of vector, max of bin to max of vector, and proportionally everything in between
+
+vec_scale_in_bins <- function(vec, min, max){
+  #input vector x of population with a give bin
+  min_vec <-  min(vec, na.rm = T)#assign min val in x to the min 
+  max_vec <- max(vec, na.rm = T)#assign max val in x to max
+  vec_range <- (vec - min_vec)/(max_vec - min_vec)#apply 0/1 scaling to vector
+  range_bin <- max - min #this would always be 0.25 in our current model
+  pos_in_bin <-  min  + range_bin * vec_range
+  return(pos_in_bin)
+}
+```
+
+```{r Building bible_urgency for maps and tables}
+
+bible_urgency <- speakers_bible %>%
+  #remove languages with full translations or no status
+  filter(BibleStatus > 0) %>%
+  filter(BibleStatus < 5) %>%
+  #cleaning up duplicate columns
+  select(-Language.y) %>%
+  rename(Language = Language.x) %>%
+  #creating a unique key for later maps 
+  mutate(ID3ROG3 = paste(PeopleID3, ROG3, sep = ""))
+
+```
+
+```{r using bible_urgency to make the translation urgency table}
+mason_table <- bible_urgency
+
+mason_table <- mason_table %>%
+  #sums the same languages across rows such that each language occupies one row
+  aggregate(Speakers ~ Language, mason_table, sum) 
+
+mason_table <- bible_urgency %>%
+  #reduces bible_urgency to just three columns and joins them to mason_table
+  select(ID3ROG3, Language, BibleStatus) %>%
+  inner_join(mason_table, by = "Language") %>%
+  distinct()
+
+mason_table <- mason_table %>%
+  #using vec_scale_in_bins to calculate residuals used in urgency score
+  mutate(masonpop = vec_scale_in_bins(mason_table$Speakers, min = 1, max = 4)) %>%
+  mutate(masonresid = masonpop - BibleStatus) 
+
+mason_table <- mason_table %>%
+  #filtering for negative residuals i.e. languages that have good translation progress for their respective population size3
+  filter(masonresid > 0)
+
+mason_table <- mason_table %>%
+  #creating the final score from 0 to 1
+  mutate(masonscore = (vec_scale_in_bins(mason_table$masonresid, min = 0, max = 1)))
+
+mason_table_output <- mason_table %>%
+  #cleaning up the table so it is appropriate for printing, choosing the top 12 languages
+  rename(UrgencyScore = masonscore) %>%
+  select(Language, Speakers, BibleStatus, UrgencyScore) %>%
+  arrange(desc(UrgencyScore)) %>%
+  distinct() %>%
+  slice(1:12)
+
+mason_tbl <- gt(mason_table_output)
+#making the gt table
+
+mason_tbl <- mason_tbl %>%
+  tab_header(title = "Languages Most Urgently Needing Bible Translations", subtitle = "Source: Joshua Project")
+
+mason_tbl
+
+gtsave(mason_tbl, "MasonTable.png")
+
+```
+
+```{r making the urgency map}
+world <- map_data("world")
+
+people_locations <- all_peoples_by_country %>%
+  #dataset containing just people groups and their geo locations
+  select(PeopleID3, ROG3, Latitude, Longitude) %>%
+  mutate(ID3ROG3 = paste(PeopleID3, ROG3, sep = "")) %>%
+  select(ID3ROG3, Latitude, Longitude)
+
+top_12 <- bible_urgency %>%
+  #choosing the languages with the top 12 urgency scores
+  filter(Language == "Chinese, Jinyu"
+         | Language == "Pashto, Central"
+         | Language == "Arabic, Sanaani Spoken"
+         | Language == "Saraiki"
+         | Language == "Chinese, Huizhou"
+         | Language == "Chinese, Min Zhong"
+         | Language == "Arabic, Omani Spoken"
+         | Language == "Aimaq"
+         | Language == "Zhuang, Zuojiang"
+         | Language == "Zhuang, Yongnan"
+         | Language == "Zhuang, Guibei"
+         | Language == "Miao, Western Xiangxi") %>%
+  select(Language, ID3ROG3, Speakers)
+
+top_12 <- top_12 %>%
+  group_by(Language) %>%
+  arrange(desc(Speakers)) %>%
+  slice(1)
+
+top_12 <- top_12 %>%
+  #joining geo location data to languages
+  left_join(people_locations, by = "ID3ROG3")
+
+top_12 <- mason_table %>%
+  #joining urgency score data to languages
+  select(Language, masonscore) %>%
+  right_join(top_12, by = "Language")
+
+top_12 <- top_12 %>%
+  #removing the key 
+  select(-ID3ROG3)
+
+top_12 <- top_12 %>%
+  group_by(Language) %>%
+  arrange(desc(Speakers)) %>%
+  slice(1)
+
+mason_map <- mason_table %>%
+  inner_join(people_locations, by = "ID3ROG3") %>%
+  #creating a data set that has all languages but the top 12
+  filter(Speakers < 1400000)
+  
+  
+urgency_map <- ggplot() +
+  #making the world map with two layers. Layer 1 is all languages but the top 12 with small dots, while layer 2 is the top 12 languages with larger circles
+  geom_map(
+    data = world,
+    map = world,
+    aes(long, lat, map_id = region),
+    color = "gray", fill = "lightgray", size = 0.1,
+    na.rm = T) +
+  geom_point(
+    data = mason_map,
+    aes(Longitude, Latitude, color = masonscore), alpha = 0.3, size = 1) +
+    labs(title = "The Languages Most Urgently Needing Bible Translations", color = "Bible Translation Urgency Rating", subtitle = "Source: Joshua Project 2022") +
+    scale_color_distiller(palette = "Reds", direction = 1) +
+  geom_point(
+    data = top_12,
+    aes(Longitude, Latitude, color = masonscore), alpha = 0.8, size = 5) +
+    theme_void() +
+    theme(legend.position = "bottom")
+
+urgency_map
+
+ggsave("MasonMap.png", dpi = 600)
+```
+```{r Table for translation status}
+bible_urgency_table <- bible_urgency %>%
+  select(Language, Speakers)
+
+bible_urgency_table <- bible_urgency_table %>%
+  aggregate(Speakers ~ Language, sum)
+
+bible_urgency_table <- bible_urgency %>%
+  select(ID3ROG3, Language, BibleStatus) %>%
+  inner_join(bible_urgency_table, by = "Language")
+
+bible_urgency_table <- bible_urgency_table %>%
+  select(-ID3ROG3) %>%
+  distinct()
+
+bible_urgency_table <- bible_urgency_table %>%
+  mutate(Explanation = case_when(
+    BibleStatus == 1 ~ "No progress",
+    BibleStatus == 2 ~ "Translation begun",
+    BibleStatus == 3 ~ "Portions Complete",
+    BibleStatus == 4 ~ "New Testament Complete"
+  ))
+
+  
+bible_urgency_table <- bible_urgency_table %>%
+  arrange(desc(Speakers)) %>%
+  slice(1:12) %>%
+  select(Language, Speakers, BibleStatus, Explanation)
+  
+translation_tbl <- gt(bible_urgency_table) %>%
+ tab_header(title = "The World's Most Commonly Spoken Languages Without Full Bible Translations", subtitle = "Source: Joshua Project")
+
+translation_tbl
+
+gtsave(translation_tbl, "TranslationTable.png")
+```
+
+
+```{r World Bible Status Map with point size proportional to Speakers and color proportional to status}
+
+bible_urgency_map <- bible_urgency 
+
+bible_urgency_map <- people_locations %>%
+  select(ID3ROG3, Latitude, Longitude) %>%
+  #adding geo location data to languages
+  inner_join(bible_urgency_map, by = "ID3ROG3")
+
+world_status_map <- ggplot() +
+  #making a world map where size is proportional to speakers and color is proportional to translation status
+  geom_map(
+    data = world,
+    map = world,
+    aes(long, lat, map_id = region),
+    color = "gray", fill = "lightgray", size = 0.1,
+    na.rm = T) +
+  geom_point(
+    data = bible_urgency_map,
+    aes(Longitude, Latitude, size = Speakers, color = BibleStatus, alpha = 0.5)) +
+  scale_alpha(guide = 'none') +
+  scale_size_continuous(range = c(0.05, 7), guide = "none") +
+  labs(color = "Bible Translation Status") +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  scale_color_distiller(palette = "OrRd", direction = -1)
+
+world_status_map
+
+ggsave("BibleStatusMap.png")
+```
+```{r Saving all datasets}
+
+write.csv(bible_urgency, "bible_urgency.csv")
+write.csv(bible_urgency_map, "bible_urgency_map.csv")
+write.csv(bible_urgency_table, "bible_urgency_table.csv")
+write.csv(mason_map, "mason_map.csv")
+write.csv(mason_table, "mason_table.csv")
+write.csv(mason_table_output, "mason_table_output.csv")
+write.csv(people_locations, "people_locations.csv")
+write.csv(top_12, "top_12.csv")
+write.csv(translation_tbl, "translation_tbl.csv")
+
+
+```
+
+
+
+
