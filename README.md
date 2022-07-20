@@ -1,6 +1,8 @@
 <h1>Global Christianity Data Visualization Project</h1> Global Christianity Data Visualization Project
 A web app built in R Shiny for users to explore global Christianity data from Joshua Project, World Watch List, and a variety of datasets.
- This project is supported by<strong> Gordon College Career and Connection Institute, Indigitous U.S., and Joshua Project</strong>.
+This project is supported by <strong> Gordon College Career and Connection Institute, Indigitous U.S., and Joshua Project</strong>.
+You can access the current version here: 
+ http://global-christianity-dataviz.shinyapps.io/demo
 
 ## Project Background
 The Joshua Project is a Christian mission organization that statistically potray the unreached people groups in the world. Per records, there are 17400 people's group in the world, Joshua Project tracks the mission work and evangelism progress within these people groups. Our project "Global Christianity Data Visualization Project" used Joshua's Project raw data and visualizations, world watch list and a variety of other data sets to create a product that better displays the world mission status.  
