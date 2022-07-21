@@ -42,24 +42,30 @@ all_peoples$latitude <- as.numeric(all_peoples$latitude)
 all_peoples$longitude <- as.numeric(all_peoples$longitude)
 sample_data <- all_peoples[sample(nrow(all_peoples), size = 300), ]
 
-wwl_countries <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/countrieswwl.csv") %>%
+wwl_countries <- read_csv("https://raw.githubusercontent.com/GZ430/global-christianity-dataviz-jp/main/data/countrieswwl.csv") |> 
   clean_names()
 
 #change select choices name here:
 vars_name <- c(
   "Government Restriction Index 2019" = "dec19gri",
   "World Watch List Score 2022" = "total_score_wwl_2022",
-  "Private Life" = "private_life",
-  "Family Life" = "family_life",
-  "Community Life" = "community_life",
-  "Church Life" = "church_life",
-  "Violence" = "violence",
+  "WWL-Private Life" = "private_life",
+  "WWL-Family Life" = "family_life",
+  "WWL-Community Life" = "community_life",
+  "WWL-Church Life" = "church_life",
+  "WWL-Violence" = "violence",
   "Percent Urbanized" = "percent_urbanized",
   "Literacy Rate" = "literacy_rate",
   "Percent Christianity" = "percent_christianity",
   "Percent Evangelical" = "percent_evangelical",
   "Workers Needed" = "workers_needed"
+  
 )
+
+#"Human Development Index" = "human_development_index_hdi",
+#"Life expectancy at birth" = "life_expectancy_at_birth",
+#"Mean years of schooling" = "mean_years_of_schooling",
+#"Gross national income (GNI) per capita" = "gross_national_income_gni_per_capita",
 
 colors_name <- c(
   "Continent" = "continent",
@@ -78,171 +84,171 @@ map.world_WWL22 <- map.world_WWL22 |>
 ##########################
 ##### User interface #####
 ##########################
-  ui <- fluidPage(
-    theme = shinytheme("united"),
-    navbarPage(
-      ##########
-      ## Home ##
-      ##########
-      "Global Christianity Data Exploration",
+ui <- fluidPage(
+  theme = shinytheme("united"),
+  navbarPage(
+    ##########
+    ## Home ##
+    ##########
+    "Global Christianity Data Exploration",
+    ##########
+    ## Maps ##
+    ##########
+    navbarMenu(
+      "View Maps",
       tabPanel(
-        "Home",
+        "Explore by Religion",
+        sidebarLayout(
+          sidebarPanel(
+            h4("Welcome! This is a web app for you to explore 
+               global Christianity data. You can interact with maps, view metrics, or check out our data visualizations in About > View Gallery. 
+               Have fun!"),
+            
+            h4(
+              "Explore by Religion", 
+              style = "padding-bottom: 20px"
+            ),
+            selectInput("religion", 
+                        "Select Primary Religion", 
+                        unique(all_peoples$primary_religion)),
+            
+            actionButton("shuffle", "Click Me to Re-Shuffle"),
+            h5("The dots you see on the map only represent a random sampling from all 17400 people groups. 
+                 Re-shuffle function coming soon."),
+            h5(a(href = "https://joshuaproject.net/global/progress", 
+                 "What does JP Scale represent? "))
+            
+          ),
+          mainPanel(
+            h5("Click on the dot to see more information about that group."),
+            leafletOutput("map_religion", width="800", height="400"),
+            h5("All people groups from the selected religion:"),
+            dataTableOutput("table_religion")
+            
+          )
+        )
+      ),
+      tabPanel(
+        "Explore by Continent",
         sidebarLayout(
           sidebarPanel(
             h4(
-              "This is a interactive web app that lets you explore global Christianity Data.", 
+              "Explore by Continent", 
               style = "padding-bottom: 20px"
-            )
+            ),
+            selectInput("continent", 
+                        "Select Continent", 
+                        unique(all_peoples$continent)),
+            actionButton("shuffle", "Click Me to Re-Shuffle"),
+            h5("The dots you see on the map only represent a random sampling from all 17400 people groups. 
+                 Re-shuffle function coming soon."),
+            h5(a(href = "https://joshuaproject.net/global/progress", 
+                 "What does JP Scale represent? "))
           ),
           mainPanel(
-            h4("See our data visualizations: "),
-            h4(a(href="https://drive.google.com/drive/folders/1pCIvtPP8g018jGli9OZ8BgywmPsbVxT0?usp=sharing", 
-              "Click here to view gallary!")),
-            h6("______________________________________________________"),
-            h5("Our Data Source include: "),
-            tags$li(a(
-              href="https://joshuaproject.net", 
-              "Joshua Project"
-            )),
-            tags$li(a(
-              href="https://www.opendoorsusa.org/christian-persecution/world-watch-list", 
-              "World Watch List"
-            )),
-            tags$li(a(
-              href="https://www.pewresearch.org/topic/religion", 
-              "Pew Research Center"
-            )),
-            tags$li(a(
-              href="https://www.worldbank.org/en/home", 
-              "World Bank"
-            )),
-            h6("______________________________________________________"),
-            h1(""),
-            h5("This project is ongoing. Visit our Github page for more info."),
-            a(href="https://github.com/GZ430/global-christianity-dataviz-jp", 
-              "Click here for GitHub repo!")
-           
+            h5("Click on the dot to see more information about that group."),
+            leafletOutput("map_continent", width="800", height="400"),
+            h5("All people groups from the selected continent: "),
+            dataTableOutput("table_continent")
+          )
+        )
+      )
+    ),
+    
+    ############
+    ## Metric ##
+    ############
+    navbarMenu(
+      "View Metrics",
+      tabPanel(
+        "World Watch List Interactive",
+        sidebarLayout(
+          sidebarPanel(
+            selectInput("x_var", 
+                        label = h3("Select X Value"), 
+                        choices = vars_name),
+            selectInput("y_var", label = h3("Select Y Value"), 
+                        choices = vars_name),
+            
+            selectInput("color", label = h3("Select Color Value"), 
+                        choices = colors_name)
+          ),
+          mainPanel(
+            h4("Higher score means more persecution."),
+            h5("Hover over the dot for more information."),
+            h5(a(href = "https://joshuaproject.net/global/progress", 
+                 "What does JP Scale represent? ")),
+            ggiraphOutput("scatterplot")
+            
           )
         )
       ),
       
-      ##########
-      ## Maps ##
-      ##########
-      navbarMenu(
-        "View Maps",
-        tabPanel(
-          "Explore by Religion",
-          sidebarLayout(
-            sidebarPanel(
-              h4(
-                "Explore by Religion", 
-                style = "padding-bottom: 20px"
-              ),
-              selectInput("religion", 
-                          "Select Primary Religion", 
-                          unique(all_peoples$primary_religion)),
-              actionButton("shuffle", "Click Me to Re-Shuffle"),
-              h5("The dots you see on the map only represent a random sampling from all 17400 people groups. 
-                 Re-shuffle function coming soon."),
-              h5(a(href = "https://joshuaproject.net/global/progress", 
-                   "What does JP Scale represent? "))
-              
+      tabPanel(
+        "Christian Persecution Status",
+        sidebarLayout(
+          sidebarPanel(
+            h4(
+              "Visualize Persecution Status", 
+              style = "padding-bottom: 20px"
             ),
-            mainPanel(
-              h5("Click on the dot to see more information about that group."),
-              leafletOutput("map_religion", width="800", height="400"),
-              h5("All people groups from the selected religion:"),
-              dataTableOutput("table_religion")
-              
-            )
-          )
-        ),
-        tabPanel(
-          "Explore by Continent",
-          sidebarLayout(
-            sidebarPanel(
-              h4(
-                "Explore by Continent", 
-                style = "padding-bottom: 20px"
-              ),
-              selectInput("continent", 
-                          "Select Continent", 
-                          unique(all_peoples$continent)),
-              actionButton("shuffle", "Click Me to Re-Shuffle"),
-              h5("The dots you see on the map only represent a random sampling from all 17400 people groups. 
-                 Re-shuffle function coming soon."),
-              h5(a(href = "https://joshuaproject.net/global/progress", 
-                   "What does JP Scale represent? "))
-            ),
-            mainPanel(
-              h5("Click on the dot to see more information about that group."),
-              leafletOutput("map_continent", width="800", height="400"),
-              h5("All people groups from the selected continent: "),
-              dataTableOutput("table_continent")
-            )
+            selectInput(inputId = "type", 
+                        label = strong("Select Primary Factor"),
+                        choices = c("Private Life" = "private_life", 
+                                    "Family Life" = "family_life", 
+                                    "Community Life" = "community_life", 
+                                    "Church Life" = "church_life", 
+                                    "Violence" = "violence", 
+                                    "Total Score" = "total_score_wwl_2022"))
+          ),
+          mainPanel(
+            h4("Darker color means more persecution."),
+            plotOutput("map")
+            
           )
         )
-      ),
-      
-      ############
-      ## Metric ##
-      ############
-      navbarMenu(
-        "View Metrics",
-        tabPanel(
-          "World Watch List Interactive",
-          sidebarLayout(
-            sidebarPanel(
-                selectInput("x_var", 
-                            label = h3("Select X Value"), 
-                            choices = vars_name),
-                selectInput("y_var", label = h3("Select Y Value"), 
-                            choices = vars_name),
-                
-                selectInput("color", label = h3("Select Color Value"), 
-                            choices = colors_name)
-                ),
-            mainPanel(
-              h4("Higher score means more persecution."),
-              h5("Hover over the dot for more information."),
-              h5(a(href = "https://joshuaproject.net/global/progress", 
-                   "What does JP Scale represent? ")),
-              ggiraphOutput("scatterplot")
-              
-             )
-          )
+      )
+    ),
+    navbarMenu(
+      "About",
+    tabPanel(
+      "Learn More",
+          h4(
+            "This is a interactive web app that lets you explore global Christianity Data.", 
+            style = "padding-bottom: 20px"),
+          h6("______________________________________________________"),
+          h5("Our Data Source include: "),
+          tags$li(a(
+            href="https://joshuaproject.net", 
+            "Joshua Project"
+          )),
+          tags$li(a(
+            href="https://www.opendoorsusa.org/christian-persecution/world-watch-list", 
+            "World Watch List"
+          )),
+          tags$li(a(
+            href="https://www.pewresearch.org/topic/religion", 
+            "Pew Research Center"
+          )),
+          tags$li(a(
+            href="https://www.worldbank.org/en/home", 
+            "World Bank"
+          )),
+          h6("______________________________________________________"),
+          h1(""),
+          h5("This project is ongoing. Visit our Github page for more info."),
+          a(href="https://github.com/GZ430/global-christianity-dataviz-jp", 
+            "Click here for GitHub repo!")
         ),
-      
-        tabPanel(
-            "Christian Persecution Status",
-            sidebarLayout(
-              sidebarPanel(
-                h4(
-                  "Visualize Persecution Status", 
-                  style = "padding-bottom: 20px"
-                ),
-                selectInput(inputId = "type", 
-                            label = strong("Select Primary Factor"),
-                            choices = c("Private Life" = "private_life", 
-                                                  "Family Life" = "family_life", 
-                                                  "Community Life" = "community_life", 
-                                                  "Church Life" = "church_life", 
-                                                  "Violence" = "violence", 
-                                                  "Total Score" = "total_score_wwl_2022"))
-              ),
-              mainPanel(
-                h4("Darker color means more persecution."),
-                plotOutput("map")
-                
-              )
-            )
-        )
+    tabPanel(
+      a(href="https://drive.google.com/drive/folders/1pCIvtPP8g018jGli9OZ8BgywmPsbVxT0?usp=sharing", 
+        "View Gallary")
       )
     )
   )
+)
 
-  
+
 
 ##########################
 #### Server Function #####
@@ -403,4 +409,6 @@ server <- function(input, output) {
 ######## Run App #########
 ########################## 
 shinyApp(ui = ui, server = server)
+
+
 
