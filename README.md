@@ -9,7 +9,7 @@ The Joshua Project is a Christian mission organization that statistically potray
 ## Purpose & Use
 The main purpose of this project is to improve the Joshua's project currect visualization and create new metrics that provide more content to the term ***unreached*** with the aim of motivating and encouraging missionaries and other parties interested to direct there attention and resources towards the unreached peoples group.
 
-   <img width="800" alt="A People Group View of the World" src="https://github.com/GZ430/global-christianity-dataviz-jp/blob/c5a9445d497829f61249436750022c51fd78830d/visuals/pg_view.png">
+   <img width="1000" alt="A People Group View of the World" src="https://github.com/GZ430/global-christianity-dataviz-jp/blob/c5a9445d497829f61249436750022c51fd78830d/visuals/pg_view.png">
 
 
 ## Strategy
@@ -18,7 +18,7 @@ Merge Joshua Project's data sets with external data sets such us data on Gross D
 
 Examples of new metrics created 
 
-<img width="1098" alt="WWL Metrics Examples" src="https://user-images.githubusercontent.com/109535700/179834654-44a963d0-c77c-49ff-8857-0b13c7f9af26.png">
+<img width="1000" alt="WWL Metrics Examples" src="https://user-images.githubusercontent.com/109535700/179834654-44a963d0-c77c-49ff-8857-0b13c7f9af26.png">
 
 Create interactive lists of unreached people groups and frontier people groups with new metrics that provide more context and features.
 
