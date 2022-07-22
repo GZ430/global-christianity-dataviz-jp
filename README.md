@@ -28,7 +28,7 @@ This will involve adding Joshua Project's API, refining our methodology, introdu
  
 
 ## About the data
-Data collection involved a variety of sources including; Joshua project, the United Nations, the World Health Organization, World Watch List, etc. For documentation, go to: https://docs.google.com/document/d/1psHPM-5oPf35H_qKz91rQZyPVWHSzJum/edit?usp=sharing&ouid=106330033559691706594&rtpof=true&sd=true
+Data collection involved a variety of sources including Joshua project, the United Nations, the World Health Organization, World Watch List, etc. For documentation, go to: https://docs.google.com/document/d/1psHPM-5oPf35H_qKz91rQZyPVWHSzJum/edit?usp=sharing&ouid=106330033559691706594&rtpof=true&sd=true
 
 ## About the team
 We are the Gordon College 2022 summer Data practicum cohort. Contact Grace.Zhao@gordon.edu if you have questions or want to contribute. Thank you!
