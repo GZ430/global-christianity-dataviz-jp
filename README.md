@@ -4,7 +4,7 @@ This project is supported by <strong> Gordon College Career and Connection Insti
 You can access the current version here: http://global-christianity-dataviz.shinyapps.io/demo
 
 ## Project Background
-The Joshua Project is a Christian mission organization that statistically potrays the unreached people groups in the world. Per records, there are 17400 people's group in the world, Joshua Project tracks the mission work and evangelism progress within these people groups. Our project "Global Christianity Data Visualization Project" used Joshua's Project raw data and visualizations, world watch list and a variety of other data sets to create a product that better displays the world mission status.  
+The Joshua Project is a Christian mission organization that statistically potrays the unreached people groups in the world. Per records, there are 17400 people's group in the world, Joshua Project tracks the mission work and evangelism progress within these people groups. Our project used Joshua's Project raw data and visualizations, world watch list and a variety of other data sets to create a product that displays the world mission status with a more friendly UI/UX.  
    
 ## Purpose & Use
 The main purpose of this project is to improve the Joshua's project currect visualization and create new metrics that provide more content to the term ***unreached*** with the aim of motivating and encouraging missionaries and other parties interested to direct there attention and resources towards the unreached peoples group.
