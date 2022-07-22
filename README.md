@@ -1,8 +1,7 @@
-<h1>Global Christianity Data Visualization Project</h1> Global Christianity Data Visualization Project
+<h1>Global Christianity Data Visualization Project</h1> 
 A web app built in R Shiny for users to explore global Christianity data from Joshua Project, World Watch List, and a variety of datasets.
 This project is supported by <strong> Gordon College Career and Connection Institute, Indigitous U.S., and Joshua Project</strong>.
-You can access the current version here: 
- http://global-christianity-dataviz.shinyapps.io/demo
+You can access the current version here: http://global-christianity-dataviz.shinyapps.io/demo
 
 ## Project Background
 The Joshua Project is a Christian mission organization that statistically potrays the unreached people groups in the world. Per records, there are 17400 people's group in the world, Joshua Project tracks the mission work and evangelism progress within these people groups. Our project "Global Christianity Data Visualization Project" used Joshua's Project raw data and visualizations, world watch list and a variety of other data sets to create a product that better displays the world mission status.  
@@ -25,11 +24,11 @@ Create interactive lists of unreached people groups and frontier people groups w
 
 ## Looking forward 
 Eventually the hope is to redesign the entire website of Joshua project by incoporating all content on shiny as a prototype for future development.
-This will involve introducing new data sets, improving all visualizations and creating new metrics to enhance a holistic perspective and close informational gaps. 
+This will involve adding Joshua Project's API, refining our methodology, introducing new data sets, improving more static visualizations, and creating new metrics to enhance a holistic perspective and close informational gaps. 
  
 
 ## About the data
-Data collection involved a variety of sources this includes; Joshua project, the United Nations, the World Health Organization, World Watch List among many. For documentation, go to: https://docs.google.com/document/d/1psHPM-5oPf35H_qKz91rQZyPVWHSzJum/edit?usp=sharing&ouid=106330033559691706594&rtpof=true&sd=true
+Data collection involved a variety of sources including; Joshua project, the United Nations, the World Health Organization, World Watch List, etc. For documentation, go to: https://docs.google.com/document/d/1psHPM-5oPf35H_qKz91rQZyPVWHSzJum/edit?usp=sharing&ouid=106330033559691706594&rtpof=true&sd=true
 
 ## About the team
 We are the Gordon College 2022 summer Data practicum cohort. Contact Grace.Zhao@gordon.edu if you have questions or want to contribute. Thank you!
